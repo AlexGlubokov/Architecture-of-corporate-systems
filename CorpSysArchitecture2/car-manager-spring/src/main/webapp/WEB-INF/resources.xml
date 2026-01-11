@@ -1,0 +1,9 @@
+<resources>
+    <Resource id="jdbc/CarDS" type="DataSource">
+        JdbcDriver = org.postgresql.Driver
+        JdbcUrl = jdbc:postgresql://localhost:5432/CarDB
+        UserName = postgres
+        Password = 25G03a2001Y
+        JtaManaged = false
+    </Resource>
+</resources>
