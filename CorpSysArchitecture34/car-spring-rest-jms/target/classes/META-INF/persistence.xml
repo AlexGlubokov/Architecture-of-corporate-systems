@@ -1,0 +1,10 @@
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="3.0">
+    <persistence-unit name="CarPU" transaction-type="JTA">
+        <jta-data-source>jdbc/CarDS</jta-data-source>
+        <class>com.architecture.model.ActionLog</class>
+        <properties>
+           <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
+           <property name="jakarta.persistence.sql-load-script-source" value="META-INF/initial_data.sql"/>
+        </properties>
+    </persistence-unit>
+</persistence>
