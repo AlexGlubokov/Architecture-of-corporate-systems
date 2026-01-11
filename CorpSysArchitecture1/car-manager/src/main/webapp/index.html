@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Car Manager</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .container { display: flex; gap: 50px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .form-section { margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 5px; }
+        button { cursor: pointer; padding: 5px 10px; }
+        .btn-edit { background-color: #ffc107; border: none; color: black; }
+        .btn-delete { background-color: #dc3545; border: none; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Car Entity Manager JakartaEE</h1>
+    <div class="container">
+        
+        <div style="flex: 1;">
+            <h2>Manufacturer</h2>
+            <div class="form-section">
+                <input type="hidden" id="mId"> 
+                <input type="text" id="mName" placeholder="Name">
+                <input type="text" id="mOrigin" placeholder="Origin">
+                <button id="mBtn" onclick="saveManufacturer()">Add</button>
+                <button onclick="resetManForm()">Clear</button>
+            </div>
+            <table id="mTable">
+                <thead><tr><th>ID</th><th>Name</th><th>Origin</th><th>Actions</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        
+        <div style="flex: 1;">
+            <h2>Car</h2>
+            <div class="form-section">
+                <input type="hidden" id="cId">
+                <input type="text" id="cModel" placeholder="Model">
+                <input type="number" id="cYear" placeholder="Year">
+                <input type="text" id="cColor" placeholder="Color">
+                <select id="cManId"></select>
+                <button id="cBtn" onclick="saveCar()">Add</button>
+                <button onclick="resetCarForm()">Clear</button>
+            </div>
+            <table id="cTable">
+                <thead><tr><th>ID</th><th>Model</th><th>Year</th><th>Manufacturer</th><th>Actions</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'api/inventory';
+
+        async function loadData() {
+            
+            const mRes = await fetch(`${API_URL}/manufacturers`);
+            const mData = await mRes.json();
+            const mBody = document.querySelector('#mTable tbody');
+            const select = document.getElementById('cManId');
+            
+            mBody.innerHTML = '';
+            const currentSel = select.value; 
+            select.innerHTML = '';
+            
+            mData.forEach(m => {
+                mBody.innerHTML += `<tr>
+                    <td>${m.id}</td><td>${m.name}</td><td>${m.origin}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editManufacturer(${m.id}, '${m.name}', '${m.origin}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteItem('manufacturers', ${m.id})">Delete</button>
+                    </td>
+                </tr>`;
+               
+                select.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+            });
+            if(currentSel) select.value = currentSel;
+
+            
+            const cRes = await fetch(`${API_URL}/cars`);
+            const cData = await cRes.json();
+            const cBody = document.querySelector('#cTable tbody');
+            cBody.innerHTML = '';
+            
+            cData.forEach(c => {
+                cBody.innerHTML += `<tr>
+                    <td>${c.id}</td><td>${c.model}</td><td>${c.year}</td><td>${c.manufacturer.name}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editCar(${c.id}, '${c.model}', ${c.year}, '${c.color}', ${c.manufacturer.id})">Edit</button>
+                        <button class="btn-delete" onclick="deleteItem('cars', ${c.id})">Delete</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        
+        function editManufacturer(id, name, origin) {
+            document.getElementById('mId').value = id;
+            document.getElementById('mName').value = name;
+            document.getElementById('mOrigin').value = origin;
+            document.getElementById('mBtn').innerText = "Update";
+        }
+
+        function resetManForm() {
+            document.getElementById('mId').value = '';
+            document.getElementById('mName').value = '';
+            document.getElementById('mOrigin').value = '';
+            document.getElementById('mBtn').innerText = "Add";
+        }
+
+        async function saveManufacturer() {
+            const id = document.getElementById('mId').value;
+            const name = document.getElementById('mName').value;
+            const origin = document.getElementById('mOrigin').value;
+            
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_URL}/manufacturers/${id}` : `${API_URL}/manufacturers`;
+
+            await fetch(url, {
+                method: method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, origin })
+            });
+            resetManForm();
+            loadData();
+        }
+
+       
+        function editCar(id, model, year, color, mid) {
+            document.getElementById('cId').value = id;
+            document.getElementById('cModel').value = model;
+            document.getElementById('cYear').value = year;
+            document.getElementById('cColor').value = color;
+            document.getElementById('cManId').value = mid;
+            document.getElementById('cBtn').innerText = "Update";
+        }
+
+        function resetCarForm() {
+            document.getElementById('cId').value = '';
+            document.getElementById('cModel').value = '';
+            document.getElementById('cYear').value = '';
+            document.getElementById('cColor').value = '';
+            document.getElementById('cBtn').innerText = "Add";
+        }
+
+        async function saveCar() {
+            const id = document.getElementById('cId').value;
+            const model = document.getElementById('cModel').value;
+            const year = document.getElementById('cYear').value;
+            const color = document.getElementById('cColor').value;
+            const mid = document.getElementById('cManId').value;
+            
+            const method = id ? 'PUT' : 'POST';
+      
+            const url = id ? `${API_URL}/cars/${id}?mid=${mid}` : `${API_URL}/cars?mid=${mid}`;
+
+            await fetch(url, {
+                method: method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ model, year, color })
+            });
+            resetCarForm();
+            loadData();
+        }
+
+        
+        async function deleteItem(type, id) {
+            if(confirm('Вы действительно хотите это сделать?')) {
+                await fetch(`${API_URL}/${type}/${id}`, { method: 'DELETE' });
+                loadData();
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
